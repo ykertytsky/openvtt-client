@@ -3,8 +3,9 @@ import Logo from '@/public/logo.svg';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, User } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { Separator } from './ui/separator';
 
 export default function Navbar() {
     const { user, isLoading, logout } = useAuth();
@@ -18,9 +19,18 @@ export default function Navbar() {
 
     return (
         <div className="flex justify-between items-center p-4 border-b border-border z-50">
-            <div className="flex items-center gap-2">
-                <Logo className="w-4 h-4 text-primary" fill="currentColor" />
-                <span className="font-medium">OpenVTT</span>
+            <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center gap-2">
+                    <Logo className="w-4 h-4 text-primary" fill="currentColor" />
+                    <span className="font-medium">OpenVTT</span>
+                </div>
+                <div className="flex items-center gap-2">
+                <Separator
+                    orientation="vertical"
+                    className="h-6"
+                />
+                <Link href="/home">Home</Link>
+                </div>
             </div>
             <div className="flex items-center gap-2">
                 {isLoading ? (

@@ -1,7 +1,7 @@
 "use client";
 
-import { AuthProvider } from "@/lib/auth-context";
+import { StoreProvider } from "@/lib/store/StoreProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>;
+  return <StoreProvider>{children}</StoreProvider>;
 }

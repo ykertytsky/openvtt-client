@@ -11,8 +11,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/lib/auth-context";
-import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 interface RegisterFormData {
   displayName: string;
@@ -39,9 +38,8 @@ const schema = z
 
 export default function RegisterForm() {
   const router = useRouter();
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, isRegisterLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -53,20 +51,17 @@ export default function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormData) => {
     setError(null);
-    setIsLoading(true);
 
     try {
       await registerUser(data.displayName, data.email, data.password);
-      // Redirect to login on success
       router.push("/login");
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
+      if (err && typeof err === 'object' && 'data' in err) {
+        const errorData = (err as { data: { message?: string } }).data;
+        setError(errorData?.message || "Registration failed");
       } else {
         setError("Something went wrong. Please try again.");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -124,8 +119,8 @@ export default function RegisterForm() {
           {error && (
             <div className="text-destructive text-sm text-center">{error}</div>
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Create account"}
+          <Button type="submit" className="w-full" disabled={isRegisterLoading}>
+            {isRegisterLoading ? "Creating account..." : "Create account"}
           </Button>
         </form>
         <div className="mt-2">

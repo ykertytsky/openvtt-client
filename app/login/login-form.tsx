@@ -11,8 +11,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/lib/auth-context";
-import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 const schema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -23,9 +22,8 @@ type LoginFormData = z.infer<typeof schema>;
 
 export default function LoginForm() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isLoginLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -37,20 +35,18 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     setError(null);
-    setIsLoading(true);
 
     try {
       await login(data.email, data.password);
-      router.push("/");
+      router.push("/home");
       router.refresh();
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
+      if (err && typeof err === 'object' && 'data' in err) {
+        const errorData = (err as { data: { message?: string } }).data;
+        setError(errorData?.message || "Invalid email or password");
       } else {
         setError("Something went wrong. Please try again.");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -90,8 +86,8 @@ export default function LoginForm() {
           {error && (
             <div className="text-destructive text-sm text-center">{error}</div>
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
+          <Button type="submit" className="w-full" disabled={isLoginLoading}>
+            {isLoginLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
         <div className="mt-2">
