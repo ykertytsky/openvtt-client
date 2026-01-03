@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OpenVTT
 
-## Getting Started
+**An open-source, self-hosted alternative to Foundry VTT**
 
-First, run the development server:
+## Vision
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+OpenVTT aims to be a fully open-source Virtual Tabletop (VTT) platform that provides a modern, flexible alternative to existing solutions. Built with transparency and community ownership in mind, OpenVTT empowers game masters and players to host their own virtual tabletop experiences without vendor lock-in or licensing restrictions.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### System-Agnostic Design
+OpenVTT is designed to work with any tabletop role-playing game system. Whether you're running D&D 5e, Pathfinder, Call of Cthulhu, or a custom homebrew system, OpenVTT provides the tools you need without forcing you into a specific framework.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Plugin Architecture
+Extensibility is at the core of OpenVTT. A robust plugin system allows the community to build and share custom features, game system implementations, and integrations. Extend functionality to match your specific needs and playstyle.
 
-## Learn More
+### Fully Open Source
+Complete transparency and freedom. The entire codebase is open source, giving you full control over your VTT instance. Review the code, contribute improvements, or customize it to your heart's content.
 
-To learn more about Next.js, take a look at the following resources:
+### Self-Hosted
+Take complete control of your data and infrastructure. Host OpenVTT on your own servers, ensuring privacy, security, and independence from third-party services. Your games, your data, your rules.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Status
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**🚧 Work in Progress**
 
-## Deploy on Vercel
+OpenVTT is currently in active development. The project is being built with modern web technologies and is evolving rapidly. Contributions, feedback, and community involvement are welcome as we work toward a stable release.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Architecture
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+OpenVTT consists of two main components:
+
+- **Client** (`openvtt-client`): Next.js-based web application providing the user interface
+- **Server** (`openvtt-server`): NestJS backend API handling game logic, data persistence, and real-time synchronization
+
+## License
+
+This project is open source under MIT license.
+
+## Contributing
+
+Contributions are welcome! This project is in active development, and community involvement is essential to its success. Please feel free to open issues, submit pull requests, or join discussions about the project's direction.
