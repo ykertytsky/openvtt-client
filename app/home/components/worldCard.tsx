@@ -2,16 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { World } from "@/lib/store/slices/worldsApi";
+import { useDeleteWorldMutation, World } from "@/lib/store/slices/worldsApi";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { ArrowRight } from "lucide-react";
 import { useGetAssetUrlQuery } from "@/lib/store/slices/assetsApi";
+import { toast } from "sonner";
 
 export default function WorldCard({ world }: { world: World }) {
     const { name, coverImageId } = world;
     const { data: assetUrlData, isLoading: isLoadingImage } = useGetAssetUrlQuery(coverImageId!, {
         skip: !coverImageId,
     });
+    const [deleteWorld, { isLoading: isDeletingWorld }] = useDeleteWorldMutation();
+
+    const handleDeleteWorld = async () => {
+        await deleteWorld({ id: world.id });
+        toast.success("World deleted successfully");
+    };
 
     return (
         <div className="relative aspect-[16/9] overflow-hidden rounded-none ring-1 ring-foreground/10 bg-card group/card">
@@ -35,13 +43,23 @@ export default function WorldCard({ world }: { world: World }) {
                         {name}
                     </h3>
                     <div className="flex items-center gap-2 shrink-0">
+                        <Popover>
+                        <PopoverTrigger asChild>
                         <Button 
                             variant="secondary" 
                             size="sm"
                             className="text-xs"
+                            
                         >
                             Edit
-                        </Button>
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent>
+                            <Button variant="destructive" size="sm" className="text-xs" onClick={handleDeleteWorld}>
+                                {isDeletingWorld ? "Deleting..." : "Delete"}
+                            </Button>
+                        </PopoverContent>
+                        </Popover>
                         <Button 
                             variant="default" 
                             size="sm"

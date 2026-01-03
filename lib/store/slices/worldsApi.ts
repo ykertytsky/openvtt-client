@@ -39,6 +39,14 @@ interface GetWorldsResponse {
   message: string;
 }
 
+interface DeleteWorldRequest {
+  id: string;
+}
+
+interface DeleteWorldResponse {
+  message: string;
+}
+
 // Worlds Api endpoints
 export const worldsApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -65,7 +73,14 @@ export const worldsApiSlice = apiSlice.injectEndpoints({
       },
       providesTags: ['World'],
     }),
+    deleteWorld: builder.mutation<DeleteWorldResponse, DeleteWorldRequest>({
+      query: ({ id }) => ({
+        url: `/worlds/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['World'],
+    }),
   }),
 });
 
-export const { useCreateWorldMutation, useGetWorldsQuery } = worldsApiSlice;
+export const { useCreateWorldMutation, useGetWorldsQuery, useDeleteWorldMutation } = worldsApiSlice;

@@ -5,6 +5,7 @@ import "./globals.css";
 // Components
 import Navbar from "@/components/navbar";
 import { Providers } from "@/components/providers";
+import { Toaster } from "@/components/ui/sonner";
 
 const outfit = Outfit({subsets:['latin'],variable:'--font-sans'});
 
@@ -25,6 +26,7 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           {children}
+          <Toaster />
         </Providers>
       </body>
     </html>
