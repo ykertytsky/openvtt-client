@@ -1,47 +1,87 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import { 
   useLoginMutation, 
   useRegisterMutation, 
   useGetProfileQuery,
-} from '@/lib/store/api';
-import { setUser, logout as logoutAction } from '@/lib/store/authSlice';
+} from '@/lib/store/slices/authApi';
+import { setUser, logout as logoutAction } from '@/lib/store/slices/authSlice';
+import { getToken, removeToken } from '@/lib/utils/token';
 
 export function useAuth() {
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const [loginMutation, { isLoading: isLoginLoading, error: loginError }] = useLoginMutation();
   const [registerMutation, { isLoading: isRegisterLoading, error: registerError }] = useRegisterMutation();
   
   // Check if we have a token
-  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
+  const hasToken = typeof window !== 'undefined' && !!getToken();
   
   // Auto-fetch profile on mount if token exists
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useGetProfileQuery(undefined, {
     skip: !hasToken,
   });
 
-  // Sync profile data to Redux state
+  // Initialize auth state on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    const token = getToken();
+    
+    if (!token) {
+      setIsInitialized(true);
+      return;
+    }
+
+    // If we have a token and user already, we're initialized
+    if (token && user) {
+      setIsInitialized(true);
+      return;
+    }
+
+    // If we have a token but no user, wait for profile query
+    if (token && !user && !isProfileLoading) {
+      if (profile) {
+        dispatch(setUser(profile));
+        setIsInitialized(true);
+      } else if (profileError) {
+        // If profile fetch fails, clear token
+        if ('status' in profileError && profileError.status === 401) {
+          removeToken();
+          dispatch(setUser(null));
+        }
+        setIsInitialized(true);
+      }
+    }
+  }, [hasToken, user, profile, profileError, isProfileLoading, dispatch]);
+
+  // Sync profile data to Redux state when profile is fetched
   useEffect(() => {
     if (profile) {
       dispatch(setUser(profile));
+      setIsInitialized(true);
     }
   }, [profile, dispatch]);
 
   // Handle 401 errors - clear token
   useEffect(() => {
     if (profileError && 'status' in profileError && profileError.status === 401) {
-      localStorage.removeItem('accessToken');
+      removeToken();
       dispatch(setUser(null));
+      setIsInitialized(true);
     }
   }, [profileError, dispatch]);
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginMutation({ email, password }).unwrap();
     dispatch(setUser(result.user));
+    setIsInitialized(true);
   }, [loginMutation, dispatch]);
 
   const register = useCallback(async (
@@ -54,6 +94,7 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     dispatch(logoutAction());
+    setIsInitialized(true);
   }, [dispatch]);
 
   // Helper to extract error message from RTK Query error
@@ -68,10 +109,13 @@ export function useAuth() {
     return 'Something went wrong';
   };
 
+  // isLoading is true if we're still initializing OR loading profile
+  const isLoading = !isInitialized || (hasToken && isProfileLoading);
+
   return {
     user,
     isAuthenticated,
-    isLoading: isProfileLoading,
+    isLoading,
     isLoginLoading,
     isRegisterLoading,
     loginError: getErrorMessage(loginError),

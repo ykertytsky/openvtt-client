@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "./api";
+import { User } from "../slices/authApi";
+import { removeToken } from "@/lib/utils/token";
 
 interface AuthState {
     user: User | null;
@@ -22,10 +23,7 @@ export const authSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.isAuthenticated = false;
-
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('accessToken');
-            }
+            removeToken();
         },
     },
 });

@@ -1,4 +1,5 @@
 'use client';
+
 import Logo from '@/public/logo.svg';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, User } from 'lucide-react';
