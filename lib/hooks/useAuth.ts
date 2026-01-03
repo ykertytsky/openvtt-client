@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import { 
   useLoginMutation, 
@@ -27,7 +27,7 @@ export function useAuth() {
   });
 
   // Initialize auth state on mount
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
@@ -62,7 +62,7 @@ export function useAuth() {
   }, [hasToken, user, profile, profileError, isProfileLoading, dispatch]);
 
   // Sync profile data to Redux state when profile is fetched
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (profile) {
       dispatch(setUser(profile));
       setIsInitialized(true);
@@ -70,7 +70,7 @@ export function useAuth() {
   }, [profile, dispatch]);
 
   // Handle 401 errors - clear token
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (profileError && 'status' in profileError && profileError.status === 401) {
       removeToken();
       dispatch(setUser(null));

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export default function WorldCard({ world }: { world: World }) {
     const { name, coverImageId } = world;
-    const { data: assetUrlData, isLoading: isLoadingImage } = useGetAssetUrlQuery(coverImageId!, {
+    const { data: assetUrlData } = useGetAssetUrlQuery(coverImageId ?? '', {
         skip: !coverImageId,
     });
     const [deleteWorld, { isLoading: isDeletingWorld }] = useDeleteWorldMutation();

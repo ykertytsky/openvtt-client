@@ -15,12 +15,14 @@ interface UploadAssetRequest {
   file: File;
   folder?: string;
   filename?: string;
+  worldId: string;
 }
 
 interface UploadAssetResponse {
   assetId: string;
   presignedUrl: string;
   objectKey: string;
+  worldId: string | null;
 }
 
 interface GetAssetUrlResponse {
@@ -31,17 +33,11 @@ interface GetAssetUrlResponse {
 export const assetsApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     uploadAsset: builder.mutation<UploadAssetResponse, UploadAssetRequest>({
-      query: ({ file, folder, filename }) => {
-        console.log('[API] Building FormData for upload:', { 
-          fileName: file.name, 
-          fileSize: file.size, 
-          fileType: file.type,
-          folder, 
-          filename 
-        });
+      query: ({ file, folder, filename, worldId }) => {
         
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('worldId', worldId);
         if (folder) {
           formData.append('folder', folder);
         }
@@ -49,7 +45,6 @@ export const assetsApiSlice = apiSlice.injectEndpoints({
           formData.append('filename', filename);
         }
 
-        console.log('[API] Sending POST to /assets/upload');
         return {
           url: '/assets/upload',
           method: 'POST',

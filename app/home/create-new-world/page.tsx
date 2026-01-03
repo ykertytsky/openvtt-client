@@ -20,54 +20,27 @@ export default function CreateNewWorldPage() {
     const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
     const [coverImageAssetId, setCoverImageAssetId] = useState<string | null>(null);
 
-    const handleFileUpload = async (file: File) => {
-        console.log('[UPLOAD] Starting file upload:', { name: file.name, size: file.size, type: file.type });
+    const handleFileUpload = (file: File) => {
         setCoverImageFile(file);
         setError(null);
         
-        // Create preview
+        // Create preview only (don't upload yet - need worldId)
         const reader = new FileReader();
         reader.onloadend = () => {
             const base64String = reader.result as string;
             setCoverImagePreview(base64String);
         };
         reader.readAsDataURL(file);
-
-        // Upload to backend
-        try {
-            console.log('[UPLOAD] Calling uploadAsset mutation...');
-            const result = await uploadAsset({
-                file,
-                folder: 'worlds/temp',
-            }).unwrap();
-            
-            console.log('[UPLOAD] Upload successful:', result);
-            setCoverImageAssetId(result.assetId);
-            // Update preview with presigned URL
-            setCoverImagePreview(result.presignedUrl);
-        } catch (err) {
-            console.error('[UPLOAD] Upload failed:', err);
-            setError("Failed to upload image. Please try again.");
-            setCoverImageFile(null);
-            setCoverImagePreview(null);
-        }
     };
 
-    const handleDrop = (acceptedFiles: File[], fileRejections: FileRejection[], event: DropEvent) => {
-        console.log('[DROPZONE] onDrop called:', { 
-            acceptedCount: acceptedFiles.length, 
-            rejectedCount: fileRejections.length,
-            rejections: fileRejections.map(r => ({ file: r.file.name, errors: r.errors }))
-        });
+    const handleDrop = (acceptedFiles: File[], fileRejections: FileRejection[], _event: DropEvent) => {
         
         if (fileRejections.length > 0) {
             const errorMessage = fileRejections[0]?.errors[0]?.message || "File rejected";
-            console.error('[DROPZONE] File rejected:', errorMessage);
             setError(`File rejected: ${errorMessage}`);
             return;
         }
         if (acceptedFiles.length > 0) {
-            console.log('[DROPZONE] File accepted, starting upload:', acceptedFiles[0].name);
             handleFileUpload(acceptedFiles[0]);
             setError(null);
         }
@@ -83,14 +56,33 @@ export default function CreateNewWorldPage() {
         setError(null);
 
         try {
+            // Create world first (without coverImageId)
             const worldData = {
                 name: data.name,
                 description: data.description || undefined,
-                coverImageId: data.coverImageId || undefined,
             };
 
             const result = await createWorld(worldData).unwrap();
-            router.push(`/world/${result.world.id}`);
+            const worldId = result.world.id;
+
+            // If there's a cover image file, upload it with the worldId
+            if (coverImageFile) {
+                try {
+                    const uploadResult = await uploadAsset({
+                        file: coverImageFile,
+                        worldId,
+                    }).unwrap();
+                    
+                    // Note: coverImageId is not set on world since we can't update it
+                    // This would require an update world endpoint
+                    setCoverImageAssetId(uploadResult.assetId);
+                } catch (uploadErr) {
+                    // Log but don't fail - world is already created
+                    setError("World created but failed to upload cover image.");
+                }
+            }
+
+            router.push(`/world/${worldId}`);
         } catch (err) {
             if (err && typeof err === 'object' && 'data' in err) {
                 const errorData = (err as { data: { message?: string } }).data;
@@ -115,9 +107,9 @@ export default function CreateNewWorldPage() {
                 />
             </div>
             {/* Cover Image Upload */}
-            <div className="w-1/2 relative overflow-hidden border-l border-border flex flex-col items-center justify-center p-4">
+            <div className="w-1/2 relative overflow-hidden border-l border-border flex flex-col items-center justify-center">
                 {coverImagePreview ? (
-                    <div className="relative w-full h-full max-w-2xl aspect-video rounded-none border border-border overflow-hidden">
+                    <div className="relative w-full h-full rounded-none border border-border overflow-hidden">
                         <Image
                             src={coverImagePreview}
                             alt="Cover preview"
@@ -129,7 +121,7 @@ export default function CreateNewWorldPage() {
                             type="button"
                             variant="destructive"
                             size="sm"
-                            className="absolute top-2 right-2"
+                            className="absolute top-2 right-2 z-10 backdrop-blur-sm hover:bg-background/50"
                             onClick={handleRemoveImage}
                         >
                             Remove
@@ -140,8 +132,11 @@ export default function CreateNewWorldPage() {
                         <Dropzone
                             onDrop={handleDrop}
                             onError={(err) => {
-                                console.error('[DROPZONE] Error:', err);
-                                setError(err.message || "Error with file upload");
+                                if (err.message === 'File is larger than 5242880 bytes') {
+                                    setError("File is larger than 5MB. Please try again with a smaller file.");
+                                } else {
+                                    setError("Error with file upload. Please try again.");
+                                }
                             }}
                             maxSize={5 * 1024 * 1024} // 5MB
                             accept={{
@@ -158,6 +153,7 @@ export default function CreateNewWorldPage() {
                             </DropzoneEmptyState>
                             <DropzoneContent />
                         </Dropzone>
+                        {error && <div className="text-destructive text-sm text-center">{error}</div>}
                     </div>
                 )}
             </div>
